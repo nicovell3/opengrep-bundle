@@ -1,0 +1,51 @@
+name: Build and Push Bundled Opengrep to GHCR
+
+on:
+  schedule:
+    # Runs at 00:00 every Sunday to keep rules fresh
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allows manual triggers via the GitHub UI
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # This grants permission to push to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Logs into GHCR automatically using the temporary system token
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Dynamically generates tags based on your GitHub username/repo
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=schedule,pattern=weekly-%Y-%U
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Speed up subsequent weekly builds using native GitHub caching
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
