@@ -26,7 +26,7 @@ RUN if [ "$OPENGREP_VERSION" = "latest" ]; then \
     opengrep --version
 
 # Clone the official open-source rules registry
-RUN git clone --depth 1 https://github.com/opengrep/opengrep-rules.git /opt/opengrep-rules
+RUN git clone --depth 1 https://github.com/semgrep/semgrep-rules.git /opt/opengrep-rules
 
 # Ensure there will be no problems with rules when launching opengrep scan
 RUN rm -rf /opt/opengrep-rules/stats/ \
