@@ -21,7 +21,7 @@ RUN if [ "$OPENGREP_VERSION" = "latest" ]; then \
     fi && \
     echo "Installing Opengrep ${OPENGREP_VERSION}" && \
     curl -fsSL -o /usr/local/bin/opengrep \
-        "https://github.com/opengrep/opengrep/releases/download/${OPENGREP_VERSION}/opengrep_musllinux_x86" && \
+        "https://github.com/opengrep/opengrep/releases/download/${OPENGREP_VERSION}/opengrep_linux_x86" && \
     chmod +x /usr/local/bin/opengrep && \
     opengrep --version
 
@@ -39,6 +39,8 @@ RUN find /opt/opengrep-rules \( -name "*.test.yaml" -o -name "*.test.yml" -o -na
 # Final stage: only the Opengrep binary (needs just musl libc) and the rules.
 ###############################################################################
 FROM alpine:latest
+
+RUN apk add --no-cache git
 
 # Copy in just the artifacts built above
 COPY --from=builder /usr/local/bin/opengrep /usr/local/bin/opengrep
@@ -58,4 +60,3 @@ ENV OPENGREP_ENABLE_VERSION_CHECK=false
 
 # Ensure all the included rules are valid
 RUN opengrep validate /opt/opengrep-rules
-
